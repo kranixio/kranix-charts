@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kranix-core.fullname" . }}
+  labels:
+    {{- include "kranix-core.labels" . | nindent 4 }}
+data:
+  reconcile_interval: {{ .Values.config.reconcile_interval | quote }}
+  max_concurrent_reconciles: {{ .Values.config.max_concurrent_reconciles | quote }}
+  state_backend: {{ .Values.state.backend | quote }}
+  {{- if eq .Values.state.backend "postgres" }}
+  postgres_host: {{ .Values.state.postgres.host | quote }}
+  postgres_port: {{ .Values.state.postgres.port | quote }}
+  postgres_database: {{ .Values.state.postgres.database | quote }}
+  {{- end }}

@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kranix-core.fullname" . }}
+  labels:
+    {{- include "kranix-core.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "kranix-core.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kranix-core.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "kranix-core.serviceAccountName" . }}
+      containers:
+        - name: kranix-core
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: grpc
+              containerPort: 50051
+              protocol: TCP
+          env:
+            - name: RECONCILE_INTERVAL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "kranix-core.fullname" . }}
+                  key: reconcile_interval
+            - name: MAX_CONCURRENT_RECONCILES
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "kranix-core.fullname" . }}
+                  key: max_concurrent_reconciles
+            - name: STATE_BACKEND
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "kranix-core.fullname" . }}
+                  key: state_backend
+            {{- if eq .Values.state.backend "postgres" }}
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "kranix-core.fullname" . }}
+                  key: postgres_host
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "kranix-core.fullname" . }}
+                  key: postgres_port
+            - name: POSTGRES_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "kranix-core.fullname" . }}
+                  key: postgres_database
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.state.postgres.existingSecret | default (include "kranix-core.fullname" .) }}
+                  key: {{ .Values.state.postgres.secretKey }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

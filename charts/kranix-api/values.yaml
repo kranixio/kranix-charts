@@ -1,0 +1,35 @@
+replicaCount: 2
+
+image:
+  repository: kranix-api
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  className: nginx
+  host: kranix.example.com
+  tls: true
+  annotations: {}
+
+auth:
+  mode: jwt
+  jwtSecret: ""
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

@@ -1,0 +1,16 @@
+# Chart Testing Configuration
+# See https://github.com/helm/chart-testing
+
+# List of charts to test
+charts:
+  - charts/kranix
+
+# Chart repositories to use
+chart-repos:
+  - stable=https://charts.helm.sh/stable
+
+# Linting configuration
+lint-conf: .ct.yaml
+
+# Additional configuration
+helm-extra-args: --timeout 5m

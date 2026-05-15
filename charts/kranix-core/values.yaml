@@ -1,0 +1,37 @@
+replicaCount: 1
+
+image:
+  repository: kranix-core
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 50051
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+config:
+  reconcile_interval: 15s
+  max_concurrent_reconciles: 10
+
+state:
+  backend: postgres
+  postgres:
+    host: ""
+    port: 5432
+    database: kranix
+    existingSecret: ""
+    secretKey: postgres-password
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

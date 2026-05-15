@@ -1,0 +1,51 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "kranix-operator.fullname" . }}
+  labels:
+    {{- include "kranix-operator.labels" . | nindent 4 }}
+rules:
+  - apiGroups:
+      - kranix.io
+    resources:
+      - kranixapps
+      - kranixapps/status
+      - kranixapps/finalizers
+      - kranixnamespaces
+      - kranixnamespaces/status
+      - kranixpolicies
+      - kranixpolicies/status
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+      - configmaps
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete

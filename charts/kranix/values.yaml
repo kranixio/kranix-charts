@@ -1,0 +1,100 @@
+# Default values for kranix umbrella chart
+# This is a YAML-formatted file.
+
+global:
+  image:
+    registry: ghcr.io/kranix-io
+    pullPolicy: IfNotPresent
+  serviceAccount:
+    create: true
+    name: kranix
+  namespace: kranix-system
+
+kranix-core:
+  enabled: true
+  replicas: 1
+  image:
+    tag: "latest"
+  config:
+    reconcile_interval: 15s
+    max_concurrent_reconciles: 10
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+kranix-api:
+  enabled: true
+  replicas: 2
+  image:
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 8080
+  ingress:
+    enabled: false
+    className: nginx
+    host: kranix.example.com
+    tls: true
+  auth:
+    mode: jwt
+    jwtSecret: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+kranix-operator:
+  enabled: true
+  replicas: 1
+  image:
+    tag: "latest"
+  leaderElection: true
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+kranix-mcp:
+  enabled: false
+  replicas: 1
+  image:
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 3100
+  safety:
+    readonlyMode: false
+    allowDeleteWorkload: true
+
+state:
+  backend: postgres
+  postgres:
+    host: ""
+    port: 5432
+    database: kranix
+    existingSecret: kranix-postgres-secret
+    secretKey: postgres-password
+
+metrics:
+  enabled: true
+  port: 9090
+  serviceMonitor:
+    enabled: false
+
+tracing:
+  enabled: false
+  endpoint: ""
+
+logging:
+  level: info
+  format: json

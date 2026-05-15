@@ -1,0 +1,24 @@
+replicaCount: 1
+
+image:
+  repository: kranix-operator
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+coreAddress: kranix-core.kranix-system.svc.cluster.local:50051
+
+leaderElection: true
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

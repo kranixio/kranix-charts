@@ -1,0 +1,34 @@
+apiVersion: v2
+name: kranix
+description: Kranix Platform - Install all Kranix components in one command
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/kranix-io/kranix
+sources:
+  - https://github.com/kranix-io/kranix
+keywords:
+  - kranix
+  - gitops
+  - kubernetes
+  - platform
+maintainers:
+  - name: Kranix Team
+    email: team@kranix.io
+dependencies:
+  - name: kranix-core
+    repository: file://../kranix-core
+    version: "0.1.0"
+    condition: core.enabled
+  - name: kranix-api
+    repository: file://../kranix-api
+    version: "0.1.0"
+    condition: api.enabled
+  - name: kranix-operator
+    repository: file://../kranix-operator
+    version: "0.1.0"
+    condition: operator.enabled
+  - name: kranix-mcp
+    repository: file://../kranix-mcp
+    version: "0.1.0"
+    condition: mcp.enabled

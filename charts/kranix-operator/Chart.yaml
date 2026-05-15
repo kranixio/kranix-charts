@@ -1,0 +1,15 @@
+apiVersion: v2
+name: kranix-operator
+description: Kranix Kubernetes Operator
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/kranix-io/kranix
+sources:
+  - https://github.com/kranix-io/kranix
+keywords:
+  - kranix
+  - operator
+maintainers:
+  - name: Kranix Team
+    email: team@kranix.io
