@@ -14,6 +14,9 @@
 - Supports multi-environment patterns (dev, staging, production overlays)
 - Includes RBAC, ServiceAccounts, NetworkPolicies, and PodDisruptionBudgets
 - Supports optional components (kranix-mcp, metrics, ingress) via feature flags
+- Production-ready profile with HA replicas, PodDisruptionBudgets, and anti-affinity rules
+- OpenTelemetry integration for distributed tracing and metrics
+- Pre-upgrade validation hooks to prevent failed upgrades
 
 ---
 
@@ -225,6 +228,88 @@ logging:
   format: json
 ```
 
+### Production-ready profile
+
+Enable high-availability configurations with a single flag:
+
+```yaml
+kranix-core:
+  productionReady:
+    enabled: true
+    replicas: 3
+    podDisruptionBudget:
+      enabled: true
+      minAvailable: 2
+    antiAffinity:
+      enabled: true
+      type: hard                # hard or soft
+```
+
+When enabled, this profile:
+- Sets high replica counts for HA
+- Creates PodDisruptionBudgets to ensure minimum availability during disruptions
+- Configures pod anti-affinity rules to spread pods across nodes
+- Can be configured per-component (kranix-core, kranix-api, kranix-operator)
+
+### OpenTelemetry integration
+
+Enable distributed tracing and metrics collection:
+
+```yaml
+kranix-core:
+  opentelemetry:
+    enabled: true
+    endpoint: "http://opentelemetry-collector.observability.svc.cluster.local:4317"
+    tracing:
+      enabled: true
+      samplingRatio: 1.0
+    metrics:
+      enabled: true
+      port: 9464
+      path: /metrics
+    resourceAttributes:
+      service.name: kranix-core
+      deployment.environment: production
+```
+
+Features:
+- Exports traces to OpenTelemetry Collector via OTLP
+- Exposes Prometheus metrics endpoint for scraping
+- Configurable sampling ratio for traces
+- Service-level resource attributes for filtering
+
+### Pre-upgrade validation hooks
+
+Run validation checks before Helm upgrades to prevent failures:
+
+```yaml
+kranix-core:
+  preUpgradeHook:
+    enabled: true
+    image:
+      repository: bitnami/kubectl
+      tag: "latest"
+    checks:
+      resources:
+        enabled: true
+        minCpu: "100m"
+        minMemory: "128Mi"
+      dependencies:
+        enabled: true
+        services:
+          - postgres
+      secrets:
+        enabled: true
+        required:
+          - kranix-postgres-secret
+```
+
+Validation checks include:
+- Resource availability (CPU, memory)
+- Dependent service readiness
+- Required secret existence
+- Hook runs as a Kubernetes Job with `pre-upgrade` annotation
+
 ---
 
 ## Multi-environment patterns
@@ -252,6 +337,16 @@ api:
     tls: true
   auth:
     mode: oidc
+  # Enable production-ready profile
+  productionReady:
+    enabled: true
+    replicas: 3
+  # Enable OpenTelemetry
+  opentelemetry:
+    enabled: true
+  # Enable pre-upgrade validation
+  preUpgradeHook:
+    enabled: true
 
 mcp:
   enabled: true

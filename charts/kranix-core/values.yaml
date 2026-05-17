@@ -5,6 +5,10 @@ image:
   tag: "latest"
   pullPolicy: IfNotPresent
 
+serviceAccount:
+  create: true
+  name: ""
+
 service:
   type: ClusterIP
   port: 50051
@@ -35,3 +39,59 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+# Production-ready profile preset
+# When enabled, sets HA replicas, PodDisruptionBudget, and anti-affinity rules
+productionReady:
+  enabled: false
+  # Overrides replicaCount when enabled
+  replicas: 3
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 2
+  antiAffinity:
+    enabled: true
+    type: hard  # soft or hard
+
+# OpenTelemetry configuration
+opentelemetry:
+  enabled: false
+  # OpenTelemetry Collector endpoint
+  endpoint: "http://opentelemetry-collector.observability.svc.cluster.local:4317"
+  # Tracing configuration
+  tracing:
+    enabled: true
+    samplingRatio: 1.0
+  # Metrics configuration
+  metrics:
+    enabled: true
+    port: 9464
+    path: /metrics
+  # Resource attributes
+  resourceAttributes:
+    service.name: kranix-core
+    deployment.environment: production
+
+# Pre-upgrade validation hook
+preUpgradeHook:
+  enabled: false
+  image:
+    repository: bitnami/kubectl
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  # Validation checks to run before upgrade
+  checks:
+    # Check if minimum required resources are available
+    resources:
+      enabled: true
+      minCpu: "100m"
+      minMemory: "128Mi"
+    # Check if dependent services are ready
+    dependencies:
+      enabled: true
+      services: []
+    # Check if required secrets exist
+    secrets:
+      enabled: true
+      required:
+        - kranix-postgres-secret

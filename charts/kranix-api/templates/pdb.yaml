@@ -1,0 +1,13 @@
+{{- if and .Values.productionReady.enabled .Values.productionReady.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "kranix-api.fullname" . }}
+  labels:
+    {{- include "kranix-api.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.productionReady.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "kranix-api.selectorLabels" . | nindent 6 }}
+{{- end }}

@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "kranix-core.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.productionReady.enabled | ternary .Values.productionReady.replicas .Values.replicaCount }}
   selector:
     matchLabels:
       {{- include "kranix-core.selectorLabels" . | nindent 6 }}
@@ -13,6 +13,12 @@ spec:
     metadata:
       labels:
         {{- include "kranix-core.selectorLabels" . | nindent 8 }}
+      {{- if .Values.opentelemetry.enabled }}
+      annotations:
+        prometheus.io/scrape: "{{ .Values.opentelemetry.metrics.enabled }}"
+        prometheus.io/port: "{{ .Values.opentelemetry.metrics.port }}"
+        prometheus.io/path: "{{ .Values.opentelemetry.metrics.path }}"
+      {{- end }}
     spec:
       serviceAccountName: {{ include "kranix-core.serviceAccountName" . }}
       containers:
@@ -23,6 +29,11 @@ spec:
             - name: grpc
               containerPort: 50051
               protocol: TCP
+            {{- if and .Values.opentelemetry.enabled .Values.opentelemetry.metrics.enabled }}
+            - name: otlp-metrics
+              containerPort: {{ .Values.opentelemetry.metrics.port }}
+              protocol: TCP
+            {{- end }}
           env:
             - name: RECONCILE_INTERVAL
               valueFrom:
@@ -61,15 +72,52 @@ spec:
                   name: {{ .Values.state.postgres.existingSecret | default (include "kranix-core.fullname" .) }}
                   key: {{ .Values.state.postgres.secretKey }}
             {{- end }}
+            {{- if .Values.opentelemetry.enabled }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.opentelemetry.endpoint | quote }}
+            - name: OTEL_SERVICE_NAME
+              value: {{ .Values.opentelemetry.resourceAttributes.service.name | quote }}
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: {{ printf "service.name=%s,deployment.environment=%s" .Values.opentelemetry.resourceAttributes.service.name .Values.opentelemetry.resourceAttributes.deployment.environment | quote }}
+            {{- if .Values.opentelemetry.tracing.enabled }}
+            - name: OTEL_TRACES_SAMPLER
+              value: "traceidratio"
+            - name: OTEL_TRACES_SAMPLER_ARG
+              value: {{ .Values.opentelemetry.tracing.samplingRatio | quote }}
+            {{- end }}
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.productionReady.enabled }}
+      {{- if .Values.productionReady.antiAffinity.enabled }}
+      affinity:
+        {{- if eq .Values.productionReady.antiAffinity.type "hard" }}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  {{- include "kranix-core.selectorLabels" . | nindent 18 }}
+              topologyKey: kubernetes.io/hostname
+        {{- else }}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    {{- include "kranix-core.selectorLabels" . | nindent 20 }}
+                topologyKey: kubernetes.io/hostname
+        {{- end }}
+      {{- end }}
+      {{- else }}
       {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- end }}
       {{- with .Values.tolerations }}
       tolerations:

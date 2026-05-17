@@ -25,6 +25,49 @@ kranix-core:
     limits:
       cpu: 500m
       memory: 512Mi
+  # Production-ready profile preset
+  productionReady:
+    enabled: false
+    replicas: 3
+    podDisruptionBudget:
+      enabled: true
+      minAvailable: 2
+    antiAffinity:
+      enabled: true
+      type: hard
+  # OpenTelemetry configuration
+  opentelemetry:
+    enabled: false
+    endpoint: "http://opentelemetry-collector.observability.svc.cluster.local:4317"
+    tracing:
+      enabled: true
+      samplingRatio: 1.0
+    metrics:
+      enabled: true
+      port: 9464
+      path: /metrics
+    resourceAttributes:
+      service.name: kranix-core
+      deployment.environment: production
+  # Pre-upgrade validation hook
+  preUpgradeHook:
+    enabled: false
+    image:
+      repository: bitnami/kubectl
+      tag: "latest"
+      pullPolicy: IfNotPresent
+    checks:
+      resources:
+        enabled: true
+        minCpu: "100m"
+        minMemory: "128Mi"
+      dependencies:
+        enabled: true
+        services: []
+      secrets:
+        enabled: true
+        required:
+          - kranix-postgres-secret
 
 kranix-api:
   enabled: true
@@ -49,6 +92,50 @@ kranix-api:
     limits:
       cpu: 500m
       memory: 256Mi
+  # Production-ready profile preset
+  productionReady:
+    enabled: false
+    replicas: 3
+    podDisruptionBudget:
+      enabled: true
+      minAvailable: 2
+    antiAffinity:
+      enabled: true
+      type: hard
+  # OpenTelemetry configuration
+  opentelemetry:
+    enabled: false
+    endpoint: "http://opentelemetry-collector.observability.svc.cluster.local:4317"
+    tracing:
+      enabled: true
+      samplingRatio: 1.0
+    metrics:
+      enabled: true
+      port: 9464
+      path: /metrics
+    resourceAttributes:
+      service.name: kranix-api
+      deployment.environment: production
+  # Pre-upgrade validation hook
+  preUpgradeHook:
+    enabled: false
+    image:
+      repository: bitnami/kubectl
+      tag: "latest"
+      pullPolicy: IfNotPresent
+    checks:
+      resources:
+        enabled: true
+        minCpu: "100m"
+        minMemory: "128Mi"
+      dependencies:
+        enabled: true
+        services:
+          - kranix-core
+      secrets:
+        enabled: true
+        required:
+          - kranix-api-jwt
 
 kranix-operator:
   enabled: true
@@ -63,6 +150,49 @@ kranix-operator:
     limits:
       cpu: 200m
       memory: 128Mi
+  # Production-ready profile preset
+  productionReady:
+    enabled: false
+    replicas: 2
+    podDisruptionBudget:
+      enabled: true
+      minAvailable: 1
+    antiAffinity:
+      enabled: true
+      type: hard
+  # OpenTelemetry configuration
+  opentelemetry:
+    enabled: false
+    endpoint: "http://opentelemetry-collector.observability.svc.cluster.local:4317"
+    tracing:
+      enabled: true
+      samplingRatio: 1.0
+    metrics:
+      enabled: true
+      port: 9464
+      path: /metrics
+    resourceAttributes:
+      service.name: kranix-operator
+      deployment.environment: production
+  # Pre-upgrade validation hook
+  preUpgradeHook:
+    enabled: false
+    image:
+      repository: bitnami/kubectl
+      tag: "latest"
+      pullPolicy: IfNotPresent
+    checks:
+      resources:
+        enabled: true
+        minCpu: "50m"
+        minMemory: "64Mi"
+      dependencies:
+        enabled: true
+        services:
+          - kranix-core
+      secrets:
+        enabled: true
+        required: []
 
 kranix-mcp:
   enabled: false

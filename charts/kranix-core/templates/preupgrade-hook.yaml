@@ -1,0 +1,64 @@
+{{- if .Values.preUpgradeHook.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "kranix-core.fullname" . }}-preupgrade
+  labels:
+    {{- include "kranix-core.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "kranix-core.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: kubectl-validator
+          image: "{{ .Values.preUpgradeHook.image.repository }}:{{ .Values.preUpgradeHook.image.tag }}"
+          imagePullPolicy: {{ .Values.preUpgradeHook.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Starting pre-upgrade validation checks..."
+              
+              {{- if .Values.preUpgradeHook.checks.resources.enabled }}
+              echo "Checking resource availability..."
+              AVAILABLE_CPU=$(kubectl top nodes --no-headers | awk '{sum+=$2} END {print sum}')
+              if [ -z "$AVAILABLE_CPU" ] || [ "$AVAILABLE_CPU" -lt {{ .Values.preUpgradeHook.checks.resources.minCpu | trimSuffix "m" }} ]; then
+                echo "ERROR: Insufficient CPU resources available"
+                exit 1
+              fi
+              echo "Resource check passed"
+              {{- end }}
+              
+              {{- if .Values.preUpgradeHook.checks.dependencies.enabled }}
+              echo "Checking dependent services..."
+              {{- range .Values.preUpgradeHook.checks.dependencies.services }}
+              kubectl wait --for=condition=ready pod -l app={{ . }} --timeout=60s -n {{ $.Release.Namespace }} || {
+                echo "ERROR: Service {{ . }} is not ready"
+                exit 1
+              }
+              echo "Service {{ . }} is ready"
+              {{- end }}
+              {{- end }}
+              
+              {{- if .Values.preUpgradeHook.checks.secrets.enabled }}
+              echo "Checking required secrets..."
+              {{- range .Values.preUpgradeHook.checks.secrets.required }}
+              kubectl get secret {{ . }} -n {{ $.Release.Namespace }} || {
+                echo "ERROR: Required secret {{ . }} not found"
+                exit 1
+              }
+              echo "Secret {{ . }} found"
+              {{- end }}
+              {{- end }}
+              
+              echo "All pre-upgrade validation checks passed successfully"
+              exit 0
+{{- end }}
