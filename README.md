@@ -17,6 +17,9 @@
 - Production-ready profile with HA replicas, PodDisruptionBudgets, and anti-affinity rules
 - OpenTelemetry integration for distributed tracing and metrics
 - Pre-upgrade validation hooks to prevent failed upgrades
+- Standalone chart installation for individual components
+- ArgoCD app-of-apps template for GitOps deployment
+- Resource sizing calculator for automatic resource recommendations
 
 ---
 
@@ -75,10 +78,31 @@ helm repo add kranix https://charts.kranix.io
 helm repo update
 ```
 
-### Install with defaults
+### Install full platform (umbrella chart)
 
 ```bash
 helm install kranix kranix/kranix \
+  --namespace kranix-system \
+  --create-namespace
+```
+
+### Install individual components (standalone charts)
+
+Each component can be installed independently:
+
+```bash
+# Install only kranix-core
+helm install kranix-core kranix/kranix-core \
+  --namespace kranix-system \
+  --create-namespace
+
+# Install only kranix-operator
+helm install kranix-operator kranix/kranix-operator \
+  --namespace kranix-system \
+  --create-namespace
+
+# Install only kranix-mcp
+helm install kranix-mcp kranix/kranix-mcp \
   --namespace kranix-system \
   --create-namespace
 ```
@@ -310,6 +334,51 @@ Validation checks include:
 - Required secret existence
 - Hook runs as a Kubernetes Job with `pre-upgrade` annotation
 
+### Resource sizing calculator
+
+Automatically calculate recommended CPU and memory resources based on workload count and deployment tier:
+
+```yaml
+kranix-core:
+  resourceCalculator:
+    enabled: true
+    workloadCount: 500           # Expected number of workloads
+    tier: medium                 # small, medium, or large
+```
+
+The calculator provides tier-based resource recommendations:
+
+**Small tier (up to 200 workloads):**
+- kranix-core: 100m-500m CPU, 128Mi-512Mi memory
+- kranix-api: 100m-500m CPU, 128Mi-512Mi memory
+- kranix-operator: 50m-200m CPU, 64Mi-256Mi memory
+
+**Medium tier (up to 500 workloads):**
+- kranix-core: 200m-1000m CPU, 256Mi-1Gi memory
+- kranix-api: 200m-1000m CPU, 256Mi-1Gi memory
+- kranix-operator: 100m-500m CPU, 128Mi-512Mi memory
+
+**Large tier (2000+ workloads):**
+- kranix-core: 1000m-4000m CPU, 512Mi-4Gi memory
+- kranix-api: 1000m-4000m CPU, 512Mi-4Gi memory
+- kranix-operator: 500m-2000m CPU, 256Mi-2Gi memory
+
+When enabled, the calculator overrides manual resource settings with calculated values.
+
+### ArgoCD GitOps deployment
+
+The charts include an ArgoCD Application manifest for GitOps-based deployment:
+
+```bash
+# Add Helm repository to ArgoCD
+argocd repo add https://charts.kranix.io --type helm --name kranix
+
+# Deploy via ArgoCD
+kubectl apply -f argocd/kranix-platform-app.yaml
+```
+
+See `argocd/README.md` for detailed GitOps deployment instructions.
+
 ---
 
 ## Multi-environment patterns
@@ -347,6 +416,11 @@ api:
   # Enable pre-upgrade validation
   preUpgradeHook:
     enabled: true
+  # Enable resource calculator
+  resourceCalculator:
+    enabled: true
+    workloadCount: 500
+    tier: medium
 
 mcp:
   enabled: true

@@ -59,7 +59,17 @@ spec:
             {{- end }}
             {{- end }}
           resources:
+            {{- if .Values.resourceCalculator.enabled }}
+            {{- $calculated := include "kranix-api.calculateResources" . | fromYaml -}}
+            requests:
+              cpu: {{ $calculated.cpuRequest }}
+              memory: {{ $calculated.memoryRequest }}
+            limits:
+              cpu: {{ $calculated.cpuLimit }}
+              memory: {{ $calculated.memoryLimit }}
+            {{- else }}
             {{- toYaml .Values.resources | nindent 12 }}
+            {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

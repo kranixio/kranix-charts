@@ -1,0 +1,68 @@
+# ArgoCD GitOps values for Kranix platform
+# These values are used when deploying via ArgoCD
+
+global:
+  image:
+    registry: ghcr.io/kranix-io
+    pullPolicy: IfNotPresent
+  serviceAccount:
+    create: true
+    name: kranix
+
+kranix-core:
+  enabled: true
+  replicas: 2
+  productionReady:
+    enabled: true
+    replicas: 3
+  opentelemetry:
+    enabled: true
+  preUpgradeHook:
+    enabled: true
+
+kranix-api:
+  enabled: true
+  replicas: 2
+  productionReady:
+    enabled: true
+    replicas: 3
+  opentelemetry:
+    enabled: true
+  preUpgradeHook:
+    enabled: true
+
+kranix-operator:
+  enabled: true
+  replicas: 1
+  productionReady:
+    enabled: true
+    replicas: 2
+  opentelemetry:
+    enabled: true
+  preUpgradeHook:
+    enabled: true
+
+kranix-mcp:
+  enabled: false
+
+state:
+  backend: postgres
+  postgres:
+    host: ""
+    port: 5432
+    database: kranix
+    existingSecret: kranix-postgres-secret
+    secretKey: postgres-password
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+
+tracing:
+  enabled: true
+  endpoint: "http://opentelemetry-collector.observability.svc.cluster.local:4317"
+
+logging:
+  level: info
+  format: json

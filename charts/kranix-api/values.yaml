@@ -38,6 +38,14 @@ tolerations: []
 
 affinity: {}
 
+# Resource sizing calculator
+# Automatically calculates recommended resources based on workload count and tier
+resourceCalculator:
+  enabled: false
+  workloadCount: 100           # Expected number of API requests per second
+  tier: small                   # small, medium, or large deployment tier
+  # When enabled, overrides the resources section above
+
 # Production-ready profile preset
 # When enabled, sets HA replicas, PodDisruptionBudget, and anti-affinity rules
 productionReady:

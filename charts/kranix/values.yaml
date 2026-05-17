@@ -68,6 +68,11 @@ kranix-core:
         enabled: true
         required:
           - kranix-postgres-secret
+  # Resource sizing calculator
+  resourceCalculator:
+    enabled: false
+    workloadCount: 100
+    tier: small
 
 kranix-api:
   enabled: true
@@ -136,6 +141,11 @@ kranix-api:
         enabled: true
         required:
           - kranix-api-jwt
+  # Resource sizing calculator
+  resourceCalculator:
+    enabled: false
+    workloadCount: 100
+    tier: small
 
 kranix-operator:
   enabled: true
@@ -193,6 +203,11 @@ kranix-operator:
       secrets:
         enabled: true
         required: []
+  # Resource sizing calculator
+  resourceCalculator:
+    enabled: false
+    workloadCount: 100
+    tier: small
 
 kranix-mcp:
   enabled: false

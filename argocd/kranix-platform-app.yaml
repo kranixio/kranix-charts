@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kranix-platform
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://charts.kranix.io
+    targetRevision: 0.1.0
+    chart: kranix
+    helm:
+      valueFiles:
+        - $values/argocd/values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kranix-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
