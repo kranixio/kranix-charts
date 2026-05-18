@@ -1,6 +1,10 @@
 # Default values for kranix umbrella chart
 # This is a YAML-formatted file.
 
+# Cluster-wide PriorityClass resources referenced by workloads (kranix-* names).
+priorityClasses:
+  enabled: true
+
 global:
   image:
     registry: ghcr.io/kranix-io

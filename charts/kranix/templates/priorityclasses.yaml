@@ -1,0 +1,94 @@
+{{- if .Values.priorityClasses.enabled }}
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: kranix-critical
+  labels:
+    app.kubernetes.io/managed-by: kranix
+    kranix.io/tier: critical
+value: 1000000
+globalDefault: false
+description: "Kranix critical workloads that may preempt lower priority pods"
+preemptionPolicy: PreemptLowerPriority
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: kranix-high
+  labels:
+    app.kubernetes.io/managed-by: kranix
+    kranix.io/tier: high
+value: 750000
+globalDefault: false
+description: "Kranix high priority workloads that may preempt lower priority pods"
+preemptionPolicy: PreemptLowerPriority
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: kranix-normal
+  labels:
+    app.kubernetes.io/managed-by: kranix
+    kranix.io/tier: normal
+value: 500000
+globalDefault: false
+description: "Kranix standard priority workloads with preemption"
+preemptionPolicy: PreemptLowerPriority
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: kranix-low
+  labels:
+    app.kubernetes.io/managed-by: kranix
+    kranix.io/tier: low
+value: 250000
+globalDefault: false
+description: "Kranix low priority preemptible workloads"
+preemptionPolicy: PreemptLowerPriority
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: kranix-critical-np
+  labels:
+    app.kubernetes.io/managed-by: kranix
+    kranix.io/tier: critical
+value: 990000
+globalDefault: false
+description: "Kranix critical without preemption"
+preemptionPolicy: Never
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: kranix-high-np
+  labels:
+    app.kubernetes.io/managed-by: kranix
+value: 740000
+globalDefault: false
+description: "Kranix high without preemption"
+preemptionPolicy: Never
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: kranix-normal-np
+  labels:
+    app.kubernetes.io/managed-by: kranix
+value: 490000
+globalDefault: false
+description: "Kranix normal without preemption"
+preemptionPolicy: Never
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: kranix-low-np
+  labels:
+    app.kubernetes.io/managed-by: kranix
+value: 240000
+globalDefault: false
+description: "Kranix low without preemption"
+preemptionPolicy: Never
+{{- end }}
